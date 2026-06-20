@@ -34,6 +34,7 @@ public class User {
 
     private String phoneNumber;
 
+    @Column(nullable = false)
     private Boolean active = true;
 
     private LocalDateTime createdAt;

@@ -3,6 +3,7 @@ package com.quickcart.auth.repository;
 import com.quickcart.auth.entity.RefreshToken;
 import com.quickcart.auth.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -11,5 +12,6 @@ public interface RefreshTokenRepository
 
     Optional<RefreshToken> findByToken(String token);
 
+    @Transactional
     void deleteByUser(User user);
 }
