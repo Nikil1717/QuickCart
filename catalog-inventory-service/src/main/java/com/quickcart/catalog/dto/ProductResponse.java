@@ -2,8 +2,15 @@ package com.quickcart.catalog.dto;
 
 import java.math.BigDecimal;
 
-public class ProductResponse {
+import java.io.Serializable;
+import java.math.BigDecimal;
 
+public class ProductResponse
+         {
+
+
+
+   
     private Long id;
 
     private String name;

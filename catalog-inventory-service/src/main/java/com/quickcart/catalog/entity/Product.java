@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
                 ),
 
                 @Index(
-                        name = "idx_product_category",
-                        columnList = "category_id"
+                        name = "idx_product_category_active",
+                        columnList = "category_id,active"
                 ),
 
                 @Index(
