@@ -33,6 +33,9 @@ public class Product {
             strategy = GenerationType.IDENTITY
     )
     private Long id;
+    
+    @Column(nullable = false)
+    private Integer reservedQuantity = 0;
 
     @Column(nullable = false)
     private String name;
@@ -101,12 +104,20 @@ public class Product {
     public String getDescription() {
         return description;
     }
+    
+    public Integer getReservedQuantity() {
+        return reservedQuantity;
+    }
 
     public void setDescription(
             String description) {
         this.description = description;
     }
 
+    public void setReservedQuantity(
+            Integer reservedQuantity) {
+        this.reservedQuantity = reservedQuantity;
+    }
     public BigDecimal getPrice() {
         return price;
     }
