@@ -1,12 +1,9 @@
 package com.quickcart.order.service;
 
-import com.quickcart.order.client.InventoryClient;
 import com.quickcart.order.dto.CreateOrderItemRequest;
 import com.quickcart.order.dto.CreateOrderRequest;
 import com.quickcart.order.dto.OrderItemResponse;
 import com.quickcart.order.dto.OrderResponse;
-import com.quickcart.order.dto.inventory.InventoryResponse;
-import com.quickcart.order.dto.inventory.ReserveInventoryRequest;
 import com.quickcart.order.entity.Order;
 import com.quickcart.order.entity.OrderItem;
 import com.quickcart.order.enums.OrderStatus;
@@ -15,6 +12,8 @@ import com.quickcart.order.repository.OrderRepository;
 import com.quickcart.order.util.OrderNumberGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.quickcart.order.dto.event.OrderCreatedEvent;
+import com.quickcart.order.producer.OrderEventProducer;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,19 +23,32 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderEventProducer
+    orderEventProducer;
 
-    private final IdempotencyService idempotencyService;
+    private final IdempotencyService
+            idempotencyService;
 
-    private final InventoryClient inventoryClient;
+    private final InventoryReservationService
+            inventoryReservationService;
 
     public OrderService(
             OrderRepository orderRepository,
             IdempotencyService idempotencyService,
-            InventoryClient inventoryClient) {
+            InventoryReservationService inventoryReservationService,
+            OrderEventProducer orderEventProducer) {
 
-        this.orderRepository = orderRepository;
-        this.idempotencyService = idempotencyService;
-        this.inventoryClient = inventoryClient;
+        this.orderRepository =
+                orderRepository;
+
+        this.idempotencyService =
+                idempotencyService;
+
+        this.inventoryReservationService =
+                inventoryReservationService;
+
+        this.orderEventProducer =
+                orderEventProducer;
     }
 
     @Transactional
@@ -46,7 +58,8 @@ public class OrderService {
 
         String existingOrderNumber =
                 idempotencyService
-                        .getOrderNumber(idempotencyKey);
+                        .getOrderNumber(
+                                idempotencyKey);
 
         if (existingOrderNumber != null) {
 
@@ -58,37 +71,16 @@ public class OrderService {
                                     new ResourceNotFoundException(
                                             "Order not found"));
 
-            return mapToResponse(existingOrder);
+            return mapToResponse(
+                    existingOrder);
         }
 
-        /*
-         * Reserve inventory first
-         */
-        for (CreateOrderItemRequest item :
-                request.getItems()) {
+        inventoryReservationService
+                .reserveInventory(
+                        request);
 
-            ReserveInventoryRequest reserveRequest =
-                    new ReserveInventoryRequest();
-
-            reserveRequest.setProductId(
-                    item.getProductId());
-
-            reserveRequest.setQuantity(
-                    item.getQuantity());
-
-            InventoryResponse response =
-                    inventoryClient.reserveInventory(
-                            reserveRequest);
-
-            if (!"RESERVED".equals(
-                    response.getStatus())) {
-
-                throw new RuntimeException(
-                        "Inventory reservation failed");
-            }
-        }
-
-        Order order = new Order();
+        Order order =
+                new Order();
 
         String orderNumber;
 
@@ -117,13 +109,14 @@ public class OrderService {
         BigDecimal totalAmount =
                 BigDecimal.ZERO;
 
-        for (CreateOrderItemRequest itemRequest :
-                request.getItems()) {
+        for (CreateOrderItemRequest itemRequest
+                : request.getItems()) {
 
             OrderItem orderItem =
                     new OrderItem();
 
-            orderItem.setOrder(order);
+            orderItem.setOrder(
+                    order);
 
             orderItem.setProductId(
                     itemRequest.getProductId());
@@ -154,7 +147,8 @@ public class OrderService {
                     orderItem);
         }
 
-        order.setItems(orderItems);
+        order.setItems(
+                orderItems);
 
         order.setTotalAmount(
                 totalAmount);
@@ -162,13 +156,33 @@ public class OrderService {
         order =
                 orderRepository.save(
                         order);
+        
+        OrderCreatedEvent event =
+                new OrderCreatedEvent();
+
+        event.setOrderNumber(
+                order.getOrderNumber());
+
+        event.setCustomerId(
+                order.getCustomerId());
+
+        event.setTotalAmount(
+                order.getTotalAmount());
+
+        event.setStatus(
+                order.getStatus().name());
+
+        orderEventProducer
+                .publishOrderCreated(
+                        event);
 
         idempotencyService
                 .saveOrderNumber(
                         idempotencyKey,
                         order.getOrderNumber());
 
-        return mapToResponse(order);
+        return mapToResponse(
+                order);
     }
 
     public OrderResponse getOrder(
@@ -182,7 +196,8 @@ public class OrderService {
                                 new ResourceNotFoundException(
                                         "Order not found"));
 
-        return mapToResponse(order);
+        return mapToResponse(
+                order);
     }
 
     public List<OrderResponse>
@@ -190,7 +205,8 @@ public class OrderService {
             Long customerId) {
 
         return orderRepository
-                .findByCustomerId(customerId)
+                .findByCustomerId(
+                        customerId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -202,7 +218,8 @@ public class OrderService {
         OrderResponse response =
                 new OrderResponse();
 
-        response.setId(order.getId());
+        response.setId(
+                order.getId());
 
         response.setOrderNumber(
                 order.getOrderNumber());
@@ -220,8 +237,8 @@ public class OrderService {
                 itemResponses =
                 new ArrayList<>();
 
-        for (OrderItem item :
-                order.getItems()) {
+        for (OrderItem item
+                : order.getItems()) {
 
             OrderItemResponse itemResponse =
                     new OrderItemResponse();
