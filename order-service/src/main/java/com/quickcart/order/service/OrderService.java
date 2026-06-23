@@ -1,9 +1,12 @@
 package com.quickcart.order.service;
 
+import com.quickcart.order.client.InventoryClient;
 import com.quickcart.order.dto.CreateOrderItemRequest;
 import com.quickcart.order.dto.CreateOrderRequest;
 import com.quickcart.order.dto.OrderItemResponse;
 import com.quickcart.order.dto.OrderResponse;
+import com.quickcart.order.dto.inventory.InventoryResponse;
+import com.quickcart.order.dto.inventory.ReserveInventoryRequest;
 import com.quickcart.order.entity.Order;
 import com.quickcart.order.entity.OrderItem;
 import com.quickcart.order.enums.OrderStatus;
@@ -22,18 +25,18 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
 
-    private final IdempotencyService
-            idempotencyService;
+    private final IdempotencyService idempotencyService;
+
+    private final InventoryClient inventoryClient;
 
     public OrderService(
             OrderRepository orderRepository,
-            IdempotencyService idempotencyService) {
+            IdempotencyService idempotencyService,
+            InventoryClient inventoryClient) {
 
-        this.orderRepository =
-                orderRepository;
-
-        this.idempotencyService =
-                idempotencyService;
+        this.orderRepository = orderRepository;
+        this.idempotencyService = idempotencyService;
+        this.inventoryClient = inventoryClient;
     }
 
     @Transactional
@@ -43,8 +46,7 @@ public class OrderService {
 
         String existingOrderNumber =
                 idempotencyService
-                        .getOrderNumber(
-                                idempotencyKey);
+                        .getOrderNumber(idempotencyKey);
 
         if (existingOrderNumber != null) {
 
@@ -56,21 +58,47 @@ public class OrderService {
                                     new ResourceNotFoundException(
                                             "Order not found"));
 
-            return mapToResponse(
-                    existingOrder);
+            return mapToResponse(existingOrder);
         }
 
-        Order order =
-                new Order();
+        /*
+         * Reserve inventory first
+         */
+        for (CreateOrderItemRequest item :
+                request.getItems()) {
+
+            ReserveInventoryRequest reserveRequest =
+                    new ReserveInventoryRequest();
+
+            reserveRequest.setProductId(
+                    item.getProductId());
+
+            reserveRequest.setQuantity(
+                    item.getQuantity());
+
+            InventoryResponse response =
+                    inventoryClient.reserveInventory(
+                            reserveRequest);
+
+            if (!"RESERVED".equals(
+                    response.getStatus())) {
+
+                throw new RuntimeException(
+                        "Inventory reservation failed");
+            }
+        }
+
+        Order order = new Order();
 
         String orderNumber;
 
         do {
+
             orderNumber =
                     OrderNumberGenerator
                             .generateOrderNumber();
-        }
-        while (orderRepository
+
+        } while (orderRepository
                 .existsByOrderNumber(
                         orderNumber));
 
@@ -81,7 +109,7 @@ public class OrderService {
                 request.getCustomerId());
 
         order.setStatus(
-                OrderStatus.CREATED);
+                OrderStatus.INVENTORY_RESERVED);
 
         List<OrderItem> orderItems =
                 new ArrayList<>();
@@ -89,8 +117,8 @@ public class OrderService {
         BigDecimal totalAmount =
                 BigDecimal.ZERO;
 
-        for (CreateOrderItemRequest itemRequest
-                : request.getItems()) {
+        for (CreateOrderItemRequest itemRequest :
+                request.getItems()) {
 
             OrderItem orderItem =
                     new OrderItem();
@@ -126,8 +154,7 @@ public class OrderService {
                     orderItem);
         }
 
-        order.setItems(
-                orderItems);
+        order.setItems(orderItems);
 
         order.setTotalAmount(
                 totalAmount);
@@ -141,8 +168,7 @@ public class OrderService {
                         idempotencyKey,
                         order.getOrderNumber());
 
-        return mapToResponse(
-                order);
+        return mapToResponse(order);
     }
 
     public OrderResponse getOrder(
@@ -156,8 +182,7 @@ public class OrderService {
                                 new ResourceNotFoundException(
                                         "Order not found"));
 
-        return mapToResponse(
-                order);
+        return mapToResponse(order);
     }
 
     public List<OrderResponse>
@@ -165,8 +190,7 @@ public class OrderService {
             Long customerId) {
 
         return orderRepository
-                .findByCustomerId(
-                        customerId)
+                .findByCustomerId(customerId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -178,8 +202,7 @@ public class OrderService {
         OrderResponse response =
                 new OrderResponse();
 
-        response.setId(
-                order.getId());
+        response.setId(order.getId());
 
         response.setOrderNumber(
                 order.getOrderNumber());
@@ -197,8 +220,8 @@ public class OrderService {
                 itemResponses =
                 new ArrayList<>();
 
-        for (OrderItem item
-                : order.getItems()) {
+        for (OrderItem item :
+                order.getItems()) {
 
             OrderItemResponse itemResponse =
                     new OrderItemResponse();

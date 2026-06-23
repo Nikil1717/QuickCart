@@ -25,3 +25,29 @@ spring:
 
 jwt:
   secret: YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5eg==
+
+resilience4j:
+
+  retry:
+
+    instances:
+
+      inventoryService:
+
+        max-attempts: 3
+
+        wait-duration: 1s
+
+  circuitbreaker:
+
+    instances:
+
+      inventoryService:
+
+        sliding-window-size: 10
+
+        minimum-number-of-calls: 5
+
+        failure-rate-threshold: 50
+
+        wait-duration-in-open-state: 10s
