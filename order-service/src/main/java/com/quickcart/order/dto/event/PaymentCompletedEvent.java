@@ -1,8 +1,8 @@
-package com.quickcart.payment.dto;
+package com.quickcart.order.dto.event;
 
 import java.math.BigDecimal;
 
-public class PaymentResponse {
+public class PaymentCompletedEvent {
 
     private String paymentReference;
 
@@ -12,11 +12,9 @@ public class PaymentResponse {
 
     private BigDecimal amount;
 
-    private String paymentMethod;
-
     private String status;
 
-    public PaymentResponse() {
+    public PaymentCompletedEvent() {
     }
 
     public String getPaymentReference() {
@@ -26,7 +24,8 @@ public class PaymentResponse {
     public void setPaymentReference(
             String paymentReference) {
 
-        this.paymentReference = paymentReference;
+        this.paymentReference =
+                paymentReference;
     }
 
     public String getOrderNumber() {
@@ -36,7 +35,8 @@ public class PaymentResponse {
     public void setOrderNumber(
             String orderNumber) {
 
-        this.orderNumber = orderNumber;
+        this.orderNumber =
+                orderNumber;
     }
 
     public Long getCustomerId() {
@@ -46,7 +46,8 @@ public class PaymentResponse {
     public void setCustomerId(
             Long customerId) {
 
-        this.customerId = customerId;
+        this.customerId =
+                customerId;
     }
 
     public BigDecimal getAmount() {
@@ -56,17 +57,8 @@ public class PaymentResponse {
     public void setAmount(
             BigDecimal amount) {
 
-        this.amount = amount;
-    }
-
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(
-            String paymentMethod) {
-
-        this.paymentMethod = paymentMethod;
+        this.amount =
+                amount;
     }
 
     public String getStatus() {
@@ -76,6 +68,7 @@ public class PaymentResponse {
     public void setStatus(
             String status) {
 
-        this.status = status;
+        this.status =
+                status;
     }
 }

@@ -13,24 +13,21 @@ import com.quickcart.payment.util.PaymentReferenceGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class PaymentService {
 
-    private final PaymentRepository
-            paymentRepository;
+    private final PaymentRepository paymentRepository;
 
-    private final PaymentEventProducer
-            paymentEventProducer;
+    private final PaymentEventProducer paymentEventProducer;
 
     public PaymentService(
             PaymentRepository paymentRepository,
             PaymentEventProducer paymentEventProducer) {
 
-        this.paymentRepository =
-                paymentRepository;
-
-        this.paymentEventProducer =
-                paymentEventProducer;
+        this.paymentRepository = paymentRepository;
+        this.paymentEventProducer = paymentEventProducer;
     }
 
     @Transactional
@@ -107,6 +104,9 @@ public class PaymentService {
         event.setOrderNumber(
                 payment.getOrderNumber());
 
+        event.setCustomerId(
+                payment.getCustomerId());
+
         event.setAmount(
                 payment.getAmount());
 
@@ -117,6 +117,55 @@ public class PaymentService {
                 .publishPaymentCompleted(
                         event);
 
+        return mapToResponse(
+                payment);
+    }
+
+    public PaymentResponse getPayment(
+            String paymentReference) {
+
+        Payment payment =
+                paymentRepository
+                        .findByPaymentReference(
+                                paymentReference)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Payment not found"));
+
+        return mapToResponse(
+                payment);
+    }
+
+    public PaymentResponse getPaymentByOrder(
+            String orderNumber) {
+
+        Payment payment =
+                paymentRepository
+                        .findByOrderNumber(
+                                orderNumber)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Payment not found"));
+
+        return mapToResponse(
+                payment);
+    }
+
+    public List<PaymentResponse>
+    getPaymentsByCustomer(
+            Long customerId) {
+
+        return paymentRepository
+                .findByCustomerId(
+                        customerId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private PaymentResponse mapToResponse(
+            Payment payment) {
+
         PaymentResponse response =
                 new PaymentResponse();
 
@@ -126,11 +175,19 @@ public class PaymentService {
         response.setOrderNumber(
                 payment.getOrderNumber());
 
+        response.setCustomerId(
+                payment.getCustomerId());
+
         response.setAmount(
                 payment.getAmount());
 
+        response.setPaymentMethod(
+                payment.getPaymentMethod()
+                        .name());
+
         response.setStatus(
-                payment.getStatus().name());
+                payment.getStatus()
+                        .name());
 
         return response;
     }

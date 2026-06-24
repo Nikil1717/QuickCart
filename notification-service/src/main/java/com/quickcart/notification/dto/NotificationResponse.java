@@ -1,30 +1,30 @@
-package com.quickcart.payment.dto.event;
+package com.quickcart.notification.dto;
 
-import java.math.BigDecimal;
+public class NotificationResponse {
 
-public class PaymentCompletedEvent {
-
-    private String paymentReference;
+    private Long id;
 
     private String orderNumber;
 
     private Long customerId;
 
-    private BigDecimal amount;
+    private String message;
+
+    private String type;
 
     private String status;
 
-    public PaymentCompletedEvent() {
+    public NotificationResponse() {
     }
 
-    public String getPaymentReference() {
-        return paymentReference;
+    public Long getId() {
+        return id;
     }
 
-    public void setPaymentReference(
-            String paymentReference) {
+    public void setId(
+            Long id) {
 
-        this.paymentReference = paymentReference;
+        this.id = id;
     }
 
     public String getOrderNumber() {
@@ -47,14 +47,24 @@ public class PaymentCompletedEvent {
         this.customerId = customerId;
     }
 
-    public BigDecimal getAmount() {
-        return amount;
+    public String getMessage() {
+        return message;
     }
 
-    public void setAmount(
-            BigDecimal amount) {
+    public void setMessage(
+            String message) {
 
-        this.amount = amount;
+        this.message = message;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(
+            String type) {
+
+        this.type = type;
     }
 
     public String getStatus() {

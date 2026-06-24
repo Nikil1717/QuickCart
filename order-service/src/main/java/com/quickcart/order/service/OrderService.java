@@ -267,4 +267,27 @@ public class OrderService {
 
         return response;
     }
+    
+    @Transactional
+    public void updateOrderStatusAfterPayment(
+            String orderNumber) {
+
+        Order order =
+                orderRepository
+                        .findByOrderNumber(
+                                orderNumber)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Order not found"));
+
+        order.setStatus(
+                OrderStatus.CONFIRMED);
+
+        orderRepository.save(
+                order);
+
+        System.out.println(
+                "Order confirmed : "
+                        + orderNumber);
+    }
 }
