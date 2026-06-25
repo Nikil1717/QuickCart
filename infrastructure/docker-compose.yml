@@ -1,39 +1,104 @@
-version: '3.8'
+version: "3.9"
 
 services:
 
+  postgres:
+    image: postgres:17
+    container_name: quickcart-postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: nikil
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    networks:
+      - quickcart-network
+
   redis:
     image: redis:7
+
     container_name: quickcart-redis
+
+    restart: unless-stopped
+
     ports:
       - "6379:6379"
 
+    networks:
+      - quickcart-network
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
+
     container_name: quickcart-zookeeper
+
+    restart: unless-stopped
+
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+
     ports:
       - "2181:2181"
 
+    networks:
+      - quickcart-network
+
   kafka:
     image: confluentinc/cp-kafka:7.5.0
+
     container_name: quickcart-kafka
+
+    restart: unless-stopped
+
     depends_on:
       - zookeeper
+
     ports:
       - "9092:9092"
 
     environment:
+
       KAFKA_BROKER_ID: 1
 
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
 
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
 
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+    networks:
+      - quickcart-network
+
+  zipkin:
+    image: openzipkin/zipkin
+
+    container_name: quickcart-zipkin
+
+    restart: unless-stopped
+
+    ports:
+      - "9411:9411"
+
+    networks:
+      - quickcart-network
+
+volumes:
+
+  postgres-data:
+
+networks:
+
+  quickcart-network:
