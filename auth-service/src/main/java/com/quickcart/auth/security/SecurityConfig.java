@@ -40,6 +40,12 @@ public class SecurityConfig {
                 auth
                         .requestMatchers("/api/auth/**")
                         .permitAll()
+                        
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/actuator/**"
+                        )
+                        .permitAll()
 
                         .requestMatchers("/api/users/admin")
                         .hasAuthority("ADMIN")
