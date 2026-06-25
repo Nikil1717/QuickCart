@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+
+  gateway:
+
+    image: 709352699945.dkr.ecr.ap-south-1.amazonaws.com/quickcart-gateway:latest
+
+    container_name: quickcart-gateway
+
+    restart: unless-stopped
+
+    env_file:
+      - gateway.env
+
+    ports:
+      - "80:8080"
+
+    environment:
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      AUTH_SERVICE: ${AUTH_SERVICE}
+
+    networks:
+      - quickcart-network
+
+networks:
+
+  quickcart-network:
+
+    driver: bridge

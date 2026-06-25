@@ -1,0 +1,320 @@
+version: "3.9"
+
+services:
+
+
+
+  postgres:
+
+    image: postgres:17
+
+    container_name: quickcart-postgres
+
+    restart: unless-stopped
+
+    env_file:
+      - backend.env
+
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+    ports:
+      - "5432:5432"
+
+    networks:
+      - quickcart-network
+
+
+
+  redis:
+
+    image: redis:7
+
+    container_name: quickcart-redis
+
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+    networks:
+      - quickcart-network
+
+
+
+
+  zookeeper:
+
+    image: confluentinc/cp-zookeeper:7.5.0
+
+    container_name: quickcart-zookeeper
+
+    restart: unless-stopped
+
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+    ports:
+      - "2181:2181"
+
+    networks:
+      - quickcart-network
+
+
+
+
+  kafka:
+
+    image: confluentinc/cp-kafka:7.5.0
+
+    container_name: quickcart-kafka
+
+    restart: unless-stopped
+
+    depends_on:
+      - zookeeper
+
+    environment:
+      KAFKA_BROKER_ID: 1
+
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+    ports:
+      - "9092:9092"
+
+    networks:
+      - quickcart-network
+
+
+
+  zipkin:
+
+    image: openzipkin/zipkin
+
+    container_name: quickcart-zipkin
+
+    restart: unless-stopped
+
+    ports:
+      - "9411:9411"
+
+    networks:
+      - quickcart-network
+
+
+
+  auth-service:
+
+    image: 709352699945.dkr.ecr.ap-south-1.amazonaws.com/quickcart-auth:latest
+
+    container_name: quickcart-auth
+
+    restart: unless-stopped
+
+    env_file:
+      - backend.env
+
+    depends_on:
+      - postgres
+      - zipkin
+
+    environment:
+
+      DB_URL: jdbc:postgresql://postgres:5432/auth_user_db
+
+      DB_USERNAME: ${DB_USERNAME}
+
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      ZIPKIN_URL: ${ZIPKIN_URL}
+
+      JWT_SECRET: ${JWT_SECRET}
+
+    ports:
+      - "8081:8081"
+
+    networks:
+      - quickcart-network
+
+
+
+  catalog-service:
+
+    image: 709352699945.dkr.ecr.ap-south-1.amazonaws.com/quickcart-catalog:latest
+
+    container_name: quickcart-catalog
+
+    restart: unless-stopped
+
+    env_file:
+      - backend.env
+
+    depends_on:
+      - postgres
+      - redis
+      - zipkin
+
+    environment:
+
+      DB_URL: jdbc:postgresql://postgres:5432/catalog_db
+
+      DB_USERNAME: ${DB_USERNAME}
+
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      REDIS_HOST: ${REDIS_HOST}
+
+      REDIS_PORT: ${REDIS_PORT}
+
+      ZIPKIN_URL: ${ZIPKIN_URL}
+
+      JWT_SECRET: ${JWT_SECRET}
+
+    ports:
+      - "8082:8082"
+
+    networks:
+      - quickcart-network
+
+
+
+  order-service:
+
+    image: 709352699945.dkr.ecr.ap-south-1.amazonaws.com/quickcart-order:latest
+
+    container_name: quickcart-order
+
+    restart: unless-stopped
+
+    env_file:
+      - backend.env
+
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - zipkin
+
+    environment:
+
+      DB_URL: jdbc:postgresql://postgres:5432/order_db
+
+      DB_USERNAME: ${DB_USERNAME}
+
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      REDIS_HOST: ${REDIS_HOST}
+
+      REDIS_PORT: ${REDIS_PORT}
+
+      KAFKA_SERVERS: ${KAFKA_SERVERS}
+
+      ZIPKIN_URL: ${ZIPKIN_URL}
+
+      JWT_SECRET: ${JWT_SECRET}
+
+    ports:
+      - "8083:8083"
+
+    networks:
+      - quickcart-network
+
+
+
+  payment-service:
+
+    image: 709352699945.dkr.ecr.ap-south-1.amazonaws.com/quickcart-payment:latest
+
+    container_name: quickcart-payment
+
+    restart: unless-stopped
+
+    env_file:
+      - backend.env
+
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - zipkin
+
+    environment:
+
+      DB_URL: jdbc:postgresql://postgres:5432/payment_db
+
+      DB_USERNAME: ${DB_USERNAME}
+
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      REDIS_HOST: ${REDIS_HOST}
+
+      REDIS_PORT: ${REDIS_PORT}
+
+      KAFKA_SERVERS: ${KAFKA_SERVERS}
+
+      ZIPKIN_URL: ${ZIPKIN_URL}
+
+      JWT_SECRET: ${JWT_SECRET}
+
+    ports:
+      - "8084:8084"
+
+    networks:
+      - quickcart-network
+
+
+
+
+  notification-service:
+
+    image: 709352699945.dkr.ecr.ap-south-1.amazonaws.com/quickcart-notification:latest
+
+    container_name: quickcart-notification
+
+    restart: unless-stopped
+
+    env_file:
+      - backend.env
+
+    depends_on:
+      - kafka
+      - zipkin
+
+    environment:
+
+      KAFKA_SERVERS: ${KAFKA_SERVERS}
+
+      ZIPKIN_URL: ${ZIPKIN_URL}
+
+    ports:
+      - "8085:8085"
+
+    networks:
+      - quickcart-network
+
+
+
+volumes:
+
+  postgres-data:
+
+
+
+networks:
+
+  quickcart-network:
+
+    driver: bridge
