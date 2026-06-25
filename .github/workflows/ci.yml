@@ -1,0 +1,52 @@
+name: QuickCart CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Build Auth Service
+        working-directory: auth-service
+        run: chmod +x mvnw && ./mvnw clean package -DskipTests
+
+      - name: Build Catalog Inventory Service
+        working-directory: catalog-inventory-service
+        run: chmod +x mvnw && ./mvnw clean package -DskipTests
+
+      - name: Build Order Service
+        working-directory: order-service
+        run: chmod +x mvnw && ./mvnw clean package -DskipTests
+
+      - name: Build Payment Service
+        working-directory: payment-service
+        run: chmod +x mvnw && ./mvnw clean package -DskipTests
+
+      - name: Build Notification Service
+        working-directory: notification-service
+        run: chmod +x mvnw && ./mvnw clean package -DskipTests
+
+      - name: Build Gateway Service
+        working-directory: gateway-service
+        run: chmod +x mvnw && ./mvnw clean package -DskipTests
