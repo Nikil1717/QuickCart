@@ -15,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.quickcart.order.dto.event.OrderCreatedEvent;
 import com.quickcart.order.producer.OrderEventProducer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +31,10 @@ public class OrderService {
 
     private final IdempotencyService
             idempotencyService;
+    
+    private static final Logger logger =
+            LoggerFactory.getLogger(
+                    OrderService.class);
 
     private final InventoryReservationService
             inventoryReservationService;
@@ -286,8 +293,7 @@ public class OrderService {
         orderRepository.save(
                 order);
 
-        System.out.println(
-                "Order confirmed : "
-                        + orderNumber);
+        logger.info("Payment completed successfully for order {}",
+                order.getOrderNumber());
     }
 }
