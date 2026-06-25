@@ -1,0 +1,112 @@
+name: QuickCart Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+     
+
+      - name: Build Auth Service
+        working-directory: auth-service
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Upload Auth Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-service
+          path: auth-service/target/*.jar
+
+
+      - name: Build Catalog Service
+        working-directory: catalog-inventory-service
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Upload Catalog Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-service
+          path: catalog-inventory-service/target/*.jar
+
+     
+
+      - name: Build Order Service
+        working-directory: order-service
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Upload Order Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: order-service
+          path: order-service/target/*.jar
+
+      ####################################################
+      # PAYMENT SERVICE
+      ####################################################
+
+      - name: Build Payment Service
+        working-directory: payment-service
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Upload Payment Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: payment-service
+          path: payment-service/target/*.jar
+
+   
+
+      - name: Build Notification Service
+        working-directory: notification-service
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Upload Notification Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: notification-service
+          path: notification-service/target/*.jar
+
+   
+
+      - name: Build Gateway Service
+        working-directory: gateway-service
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Upload Gateway Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-service
+          path: gateway-service/target/*.jar
