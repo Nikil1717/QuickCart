@@ -7,6 +7,9 @@ import com.quickcart.notification.enums.NotificationStatus;
 import com.quickcart.notification.enums.NotificationType;
 import com.quickcart.notification.exception.ResourceNotFoundException;
 import com.quickcart.notification.repository.NotificationRepository;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,10 @@ public class NotificationService {
 
     private final NotificationRepository
             notificationRepository;
+    
+    private static final Logger logger =
+            LoggerFactory.getLogger(
+                    NotificationService.class);
 
     public NotificationService(
             NotificationRepository notificationRepository) {
@@ -51,9 +58,8 @@ public class NotificationService {
         notificationRepository.save(
                 notification);
 
-        System.out.println(
-                "Notification sent for order : "
-                        + event.getOrderNumber());
+        logger.info("Payment completed successfully for order {}",
+                notification.getOrderNumber());
     }
 
     public NotificationResponse

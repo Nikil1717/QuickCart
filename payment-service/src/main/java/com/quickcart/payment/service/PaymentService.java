@@ -11,8 +11,13 @@ import com.quickcart.payment.exception.ResourceNotFoundException;
 import com.quickcart.payment.producer.PaymentEventProducer;
 import com.quickcart.payment.repository.PaymentRepository;
 import com.quickcart.payment.util.PaymentReferenceGenerator;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 
@@ -22,6 +27,11 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
 
     private final PaymentEventProducer paymentEventProducer;
+    
+    private static final Logger logger =
+            LoggerFactory.getLogger(
+                    PaymentService.class);
+
 
     public PaymentService(
             PaymentRepository paymentRepository,
@@ -30,7 +40,8 @@ public class PaymentService {
         this.paymentRepository = paymentRepository;
         this.paymentEventProducer = paymentEventProducer;
     }
-
+    
+   
     @Transactional
     public void createPayment(
             OrderCreatedEvent event) {
@@ -68,9 +79,8 @@ public class PaymentService {
         paymentRepository.save(
                 payment);
 
-        System.out.println(
-                "Payment created for order : "
-                        + event.getOrderNumber());
+        logger.info("Payment completed successfully for order {}",
+                payment.getOrderNumber());
     }
 
     @Transactional
