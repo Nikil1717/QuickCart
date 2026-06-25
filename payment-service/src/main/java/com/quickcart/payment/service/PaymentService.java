@@ -7,6 +7,7 @@ import com.quickcart.payment.dto.event.PaymentCompletedEvent;
 import com.quickcart.payment.entity.Payment;
 import com.quickcart.payment.enums.PaymentMethod;
 import com.quickcart.payment.enums.PaymentStatus;
+import com.quickcart.payment.exception.ResourceNotFoundException;
 import com.quickcart.payment.producer.PaymentEventProducer;
 import com.quickcart.payment.repository.PaymentRepository;
 import com.quickcart.payment.util.PaymentReferenceGenerator;
@@ -81,7 +82,7 @@ public class PaymentService {
                         .findByOrderNumber(
                                 request.getOrderNumber())
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Payment not found"));
 
         payment.setPaymentMethod(
@@ -129,7 +130,7 @@ public class PaymentService {
                         .findByPaymentReference(
                                 paymentReference)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Payment not found"));
 
         return mapToResponse(
@@ -144,7 +145,7 @@ public class PaymentService {
                         .findByOrderNumber(
                                 orderNumber)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Payment not found"));
 
         return mapToResponse(

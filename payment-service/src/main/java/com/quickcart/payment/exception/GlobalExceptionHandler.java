@@ -1,4 +1,4 @@
-package com.quickcart.order.exception;
+package com.quickcart.payment.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;

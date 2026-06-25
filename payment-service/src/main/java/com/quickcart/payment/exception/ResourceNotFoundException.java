@@ -1,4 +1,4 @@
-package com.quickcart.order.exception;
+package com.quickcart.payment.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
 

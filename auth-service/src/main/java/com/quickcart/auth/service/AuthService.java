@@ -7,6 +7,7 @@ import com.quickcart.auth.entity.RefreshToken;
 import com.quickcart.auth.entity.Role;
 import com.quickcart.auth.entity.User;
 import com.quickcart.auth.exception.BadRequestException;
+import com.quickcart.auth.exception.ConflictException;
 import com.quickcart.auth.repository.UserRepository;
 import com.quickcart.auth.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -42,7 +43,7 @@ public class AuthService {
         if (userRepository.existsByEmail(
                 request.getEmail())) {
 
-            throw new BadRequestException(
+            throw new ConflictException(
                     "Email already exists");
         }
         

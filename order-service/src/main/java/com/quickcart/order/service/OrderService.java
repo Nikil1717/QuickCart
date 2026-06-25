@@ -277,7 +277,7 @@ public class OrderService {
                         .findByOrderNumber(
                                 orderNumber)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Order not found"));
 
         order.setStatus(

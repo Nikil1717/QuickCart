@@ -1,4 +1,4 @@
-package com.quickcart.catalog.exception;
+package com.quickcart.notification.exception;
 
 public class BadRequestException extends RuntimeException {
 

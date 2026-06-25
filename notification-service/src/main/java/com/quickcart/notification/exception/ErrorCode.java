@@ -1,4 +1,4 @@
-package com.quickcart.auth.exception;
+package com.quickcart.notification.exception;
 
 public enum ErrorCode {
 

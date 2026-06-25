@@ -5,6 +5,7 @@ import com.quickcart.notification.dto.event.PaymentCompletedEvent;
 import com.quickcart.notification.entity.Notification;
 import com.quickcart.notification.enums.NotificationStatus;
 import com.quickcart.notification.enums.NotificationType;
+import com.quickcart.notification.exception.ResourceNotFoundException;
 import com.quickcart.notification.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,7 +64,7 @@ public class NotificationService {
                 notificationRepository
                         .findById(id)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Notification not found"));
 
         return mapToResponse(

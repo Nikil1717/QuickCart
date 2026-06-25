@@ -4,6 +4,7 @@ import com.quickcart.catalog.dto.CategoryResponse;
 import com.quickcart.catalog.dto.CreateCategoryRequest;
 import com.quickcart.catalog.entity.Category;
 import com.quickcart.catalog.exception.BadRequestException;
+import com.quickcart.catalog.exception.ConflictException;
 import com.quickcart.catalog.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class CategoryService {
         if (categoryRepository.existsByName(
                 request.getName())) {
 
-            throw new BadRequestException(
+            throw new ConflictException(
                     "Category already exists");
         }
 

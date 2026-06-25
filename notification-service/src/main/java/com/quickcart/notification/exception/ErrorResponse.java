@@ -1,4 +1,4 @@
-package com.quickcart.order.exception;
+package com.quickcart.notification.exception;
 
 import java.time.LocalDateTime;
 import java.util.Map;
