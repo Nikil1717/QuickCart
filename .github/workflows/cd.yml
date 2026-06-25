@@ -1,0 +1,92 @@
+name: QuickCart CD
+
+on:
+  workflow_run:
+    workflows:
+      - QuickCart CI
+    types:
+      - completed
+
+jobs:
+
+  docker-build-and-push:
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+    strategy:
+      matrix:
+        include:
+
+          - folder: auth-service
+            repository: quickcart-auth
+
+          - folder: catalog-inventory-service
+            repository: quickcart-catalog
+
+          - folder: order-service
+            repository: quickcart-order
+
+          - folder: payment-service
+            repository: quickcart-payment
+
+          - folder: notification-service
+            repository: quickcart-notification
+
+          - folder: gateway-service
+            repository: quickcart-gateway
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract Git SHA
+        id: vars
+        run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build Docker Image
+        working-directory: ${{ matrix.folder }}
+        run: |
+          docker build \
+            -t ${{ matrix.repository }}:latest \
+            .
+
+      - name: Tag Docker Image
+        run: |
+          docker tag \
+            ${{ matrix.repository }}:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.repository }}:latest
+
+          docker tag \
+            ${{ matrix.repository }}:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.repository }}:$SHA_SHORT
+
+      - name: Push Latest Image
+        run: |
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.repository }}:latest
+
+      - name: Push Commit Image
+        run: |
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.repository }}:$SHA_SHORT
