@@ -9,13 +9,10 @@ permissions:
   contents: read
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -40,6 +37,7 @@ jobs:
           name: auth-service
           path: auth-service/target/*.jar
 
+    
 
       - name: Build Catalog Service
         working-directory: catalog-inventory-service
@@ -53,7 +51,7 @@ jobs:
           name: catalog-service
           path: catalog-inventory-service/target/*.jar
 
-     
+   
 
       - name: Build Order Service
         working-directory: order-service
@@ -67,9 +65,7 @@ jobs:
           name: order-service
           path: order-service/target/*.jar
 
-      ####################################################
-      # PAYMENT SERVICE
-      ####################################################
+      
 
       - name: Build Payment Service
         working-directory: payment-service
@@ -83,7 +79,7 @@ jobs:
           name: payment-service
           path: payment-service/target/*.jar
 
-   
+  
 
       - name: Build Notification Service
         working-directory: notification-service
@@ -110,3 +106,104 @@ jobs:
         with:
           name: gateway-service
           path: gateway-service/target/*.jar
+
+  docker:
+    name: Build & Push Docker Images
+
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+    strategy:
+      matrix:
+        include:
+          - artifact: auth-service
+            folder: auth-service
+            repository: quickcart-auth
+
+          - artifact: catalog-service
+            folder: catalog-inventory-service
+            repository: quickcart-catalog
+
+          - artifact: order-service
+            folder: order-service
+            repository: quickcart-order
+
+          - artifact: payment-service
+            folder: payment-service
+            repository: quickcart-payment
+
+          - artifact: notification-service
+            folder: notification-service
+            repository: quickcart-notification
+
+          - artifact: gateway-service
+            folder: gateway-service
+            repository: quickcart-gateway
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.folder }}/target
+
+     
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      
+
+      - name: Get Commit SHA
+        run: |
+          echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      
+
+      - name: Build Docker Image
+        working-directory: ${{ matrix.folder }}
+        run: |
+          docker build \
+            -t ${{ matrix.repository }}:latest .
+
+     
+
+      - name: Tag Docker Image
+        run: |
+          docker tag \
+            ${{ matrix.repository }}:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.repository }}:latest
+
+          docker tag \
+            ${{ matrix.repository }}:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.repository }}:$SHA_SHORT
+
+     
+
+      - name: Push Latest Image
+        run: |
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.repository }}:latest
+
+      - name: Push Commit SHA Image
+        run: |
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.repository }}:$SHA_SHORT
