@@ -678,3 +678,11 @@ Application configuration is externalized using environment variables.
 | ZIPKIN_URL | Zipkin Endpoint |
 
 
+
+## 👨‍💻 Author
+
+**Nikil T M**
+
+Java • Spring Boot • Microservices • Kafka • AWS • Docker • CI/CD • Backend Development
+
+⭐ If you found this project interesting, consider giving it a star.
