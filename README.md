@@ -27,7 +27,7 @@
 
 <p align="center">
 
-![Architecture](SystemArch.png)
+![Architecture](SystemArch1.png)
 
 </p>
 
