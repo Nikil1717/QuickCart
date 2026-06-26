@@ -646,3 +646,390 @@ Docker Engine
 ```
 
 Docker Compose is used to orchestrate all containers and provide a consistent local and production deployment environment.
+
+# ☁️ AWS Cloud Infrastructure
+
+QuickCart is deployed on **Amazon Web Services (AWS)** using a production-oriented infrastructure that separates application layers while following modern cloud deployment practices.
+
+The deployment consists of:
+
+- Custom Virtual Private Cloud (VPC)
+- Public & Private Subnets
+- Amazon EC2
+- Amazon Elastic Container Registry (ECR)
+- IAM Roles
+- Security Groups
+- Docker Compose
+- GitHub Actions CI/CD
+
+---
+
+# 🌐 AWS Architecture
+
+| Component | Purpose |
+|-----------|---------|
+| Amazon VPC | Isolated private network |
+| Internet Gateway | Internet connectivity |
+| Route Tables | Network routing |
+| Public Subnets | Internet-facing resources |
+| Private Subnets | Reserved for backend expansion |
+| Gateway EC2 | API Gateway deployment |
+| Backend EC2 | Microservices deployment |
+| Security Groups | Firewall rules |
+| IAM Role | Secure AWS authentication |
+| Amazon ECR | Docker image registry |
+
+---
+
+# 🏗️ Infrastructure Layout
+
+```
+
+Internet
+
+↓
+
+Internet Gateway
+
+↓
+
+AWS VPC
+
+├── Public Subnet A
+│
+│ Gateway EC2
+│
+│ Docker
+│
+│ Gateway Service
+│
+├── Public Subnet B
+│
+│ Reserved
+│
+├── Private Subnet A
+│
+│ Reserved for Future Expansion
+│
+└── Private Subnet B
+Reserved for Future Expansion
+
+```
+
+Backend services are currently deployed on a dedicated EC2 instance while the VPC structure is designed to support future migration into private subnets without major architectural changes.
+
+---
+
+# 🔐 IAM & Security
+
+QuickCart follows AWS security best practices by separating deployment credentials from application infrastructure.
+
+## GitHub Actions
+
+```
+
+GitHub Actions
+
+↓
+
+AWS IAM User
+
+↓
+
+Amazon ECR
+
+```
+
+GitHub Actions authenticates using repository secrets to build and publish Docker images.
+
+---
+
+## EC2 Deployment
+
+```
+
+EC2 Instance
+
+↓
+
+IAM Role
+
+↓
+
+Amazon ECR
+
+↓
+
+docker pull
+
+```
+
+The EC2 instances authenticate using **IAM Roles**, eliminating the need to store AWS Access Keys on the servers.
+
+---
+
+# 🐳 Docker Deployment
+
+Every Spring Boot microservice is packaged into an independent Docker image.
+
+## Application Containers
+
+| Container | Port |
+|------------|------|
+| Gateway | 8080 |
+| Auth | 8081 |
+| Catalog | 8082 |
+| Order | 8083 |
+| Payment | 8084 |
+| Notification | 8085 |
+
+---
+
+## Infrastructure Containers
+
+| Container | Purpose |
+|------------|----------|
+| PostgreSQL | Database |
+| Redis | Cache |
+| Kafka | Event Streaming |
+| ZooKeeper | Kafka Coordination |
+| Zipkin | Distributed Tracing |
+
+---
+
+# 📦 Amazon Elastic Container Registry (ECR)
+
+Each microservice is stored as an independent Docker repository.
+
+```
+
+Amazon ECR
+
+├── quickcart-gateway
+
+├── quickcart-auth
+
+├── quickcart-catalog
+
+├── quickcart-order
+
+├── quickcart-payment
+
+└── quickcart-notification
+
+```
+
+Each deployment pushes:
+
+- Latest Image
+- Commit SHA Tagged Image
+
+This enables version tracking and rollback if required.
+
+---
+
+# ⚙️ CI/CD Pipeline
+
+QuickCart uses **GitHub Actions** to automate the complete build and deployment process.
+
+## Build Pipeline
+
+```
+
+Developer
+
+↓
+
+Git Push
+
+↓
+
+GitHub Repository
+
+↓
+
+GitHub Actions
+
+↓
+
+Checkout Repository
+
+↓
+
+Setup Java 21
+
+↓
+
+Build Maven Projects
+
+↓
+
+Upload Build Artifacts
+
+↓
+
+Download Artifacts
+
+↓
+
+Docker Image Build
+
+↓
+
+Tag Docker Images
+
+↓
+
+Push Images to Amazon ECR
+
+```
+
+---
+
+## Deployment Pipeline
+
+```
+
+Amazon ECR
+
+↓
+
+Gateway EC2
+
+↓
+
+docker compose pull
+
+↓
+
+docker compose up -d
+
+↓
+
+Gateway Updated
+
+────────────────────────
+
+Amazon ECR
+
+↓
+
+Backend EC2
+
+↓
+
+docker compose pull
+
+↓
+
+docker compose up -d
+
+↓
+
+Backend Updated
+
+```
+
+Every deployment automatically updates the running containers using the latest Docker images stored in Amazon ECR.
+
+---
+
+# 📂 Production Deployment
+
+The production environment is separated into two Docker Compose deployments.
+
+## Gateway Deployment
+
+```
+
+Gateway EC2
+
+↓
+
+docker-compose-gateway.yml
+
+↓
+
+Gateway Container
+
+```
+
+---
+
+## Backend Deployment
+
+```
+
+Backend EC2
+
+↓
+
+docker-compose-backend.yml
+
+↓
+
+Auth
+
+Catalog
+
+Order
+
+Payment
+
+Notification
+
+↓
+
+PostgreSQL
+
+Redis
+
+Kafka
+
+ZooKeeper
+
+Zipkin
+
+```
+
+---
+
+# 🌍 Environment Configuration
+
+Application configuration is externalized using environment variables.
+
+| Variable | Description |
+|-----------|-------------|
+| SPRING_PROFILES_ACTIVE | Active Profile |
+| JWT_SECRET | JWT Secret |
+| DB_URL | PostgreSQL Connection |
+| DB_USERNAME | Database Username |
+| DB_PASSWORD | Database Password |
+| REDIS_HOST | Redis Host |
+| REDIS_PORT | Redis Port |
+| KAFKA_SERVERS | Kafka Bootstrap Servers |
+| ZIPKIN_URL | Zipkin Endpoint |
+
+---
+
+# 🚀 Deployment Highlights
+
+✅ Cloud-Native Deployment
+
+✅ Containerized Microservices
+
+✅ Independent Docker Images
+
+✅ GitHub Actions CI/CD
+
+✅ Amazon ECR Image Registry
+
+✅ Automated EC2 Deployment
+
+✅ IAM Role Based Authentication
+
+✅ Docker Compose Orchestration
+
+✅ Environment-Based Configuration
+
+✅ Production Ready Infrastructure
