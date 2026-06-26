@@ -172,7 +172,7 @@ The project simulates a real-world backend system by implementing:
 
 Every client request follows the same processing pipeline.
 
-```
+``
 Client
 
 ↓
