@@ -256,3 +256,393 @@ This project demonstrates several real-world backend engineering concepts:
 - Production-Oriented Deployment Strategy
 - Fault Isolation Between Services
 - Scalable Backend Architecture
+
+- # 🏗️ System Architecture
+
+QuickCart follows a **Cloud-Native Microservices Architecture**, where every business capability is developed as an independent Spring Boot application.
+
+Each microservice owns its own business logic and communicates using either:
+
+- **REST APIs** (Synchronous Communication)
+- **OpenFeign Clients** (Service-to-Service Communication)
+- **Apache Kafka** (Asynchronous Event-Driven Communication)
+
+The entire application is containerized using Docker and deployed to AWS EC2 through a fully automated GitHub Actions CI/CD pipeline.
+
+<p align="center">
+
+![Architecture](docs/images/quickcart-architecture.png)
+
+</p>
+
+---
+
+# 🏛️ Architecture Overview
+
+```
+                Client Applications
+         (Browser • Mobile • Postman)
+                        │
+                        ▼
+               Spring Cloud Gateway
+                        │
+      ┌─────────────────┼──────────────────┐
+      ▼                 ▼                  ▼
+ Auth Service     Catalog Service     Order Service
+                                          │
+                                          ▼
+                                 Payment Service
+                                          │
+                                          ▼
+                              Notification Service
+
+────────────────────────────────────────────────────
+
+Shared Infrastructure
+
+PostgreSQL
+Redis
+Kafka
+ZooKeeper
+Zipkin
+
+────────────────────────────────────────────────────
+
+Deployment
+
+GitHub → GitHub Actions → Amazon ECR → AWS EC2
+```
+
+---
+
+# 🔄 Request Lifecycle
+
+Every client request follows the same processing pipeline.
+
+```
+Client
+
+↓
+
+API Gateway
+
+↓
+
+JWT Authentication
+
+↓
+
+Route Mapping
+
+↓
+
+Target Microservice
+
+↓
+
+Business Logic
+
+↓
+
+Database / Redis / Kafka
+
+↓
+
+Response
+
+↓
+
+Client
+```
+
+The Gateway acts as the single entry point for every incoming request.
+
+---
+
+# 🚪 API Gateway
+
+The Gateway Service is responsible for:
+
+- Centralized API Routing
+- JWT Authentication
+- Request Authorization
+- Request Logging
+- Cross-Origin Resource Sharing (CORS)
+- Route Management
+- Secure Entry Point to Microservices
+
+All client requests first pass through the Gateway before reaching the target service.
+
+---
+
+# 🔐 Authentication Flow
+
+Authentication is implemented using **Spring Security** and **JWT (JSON Web Token)**.
+
+### Login Flow
+
+```
+User
+
+↓
+
+POST /api/auth/login
+
+↓
+
+Auth Service
+
+↓
+
+Validate Credentials
+
+↓
+
+Generate JWT Token
+
+↓
+
+Return JWT
+
+↓
+
+Client Stores Token
+
+↓
+
+Every Future Request
+
+↓
+
+Authorization Header
+
+Bearer <JWT>
+
+↓
+
+Gateway JWT Filter
+
+↓
+
+Authenticated Request
+```
+
+Passwords are securely stored using **BCrypt Password Encoding**.
+
+The application follows a **Stateless Authentication** mechanism.
+
+---
+
+# 🔗 Service-to-Service Communication
+
+QuickCart uses **OpenFeign Clients** for synchronous communication between microservices.
+
+### Why OpenFeign?
+
+- Declarative REST Client
+- Simplifies Service Calls
+- Reduces Boilerplate Code
+- Clean Integration with Spring Boot
+- Easier Maintenance
+
+Example Flow
+
+```
+Order Service
+
+↓
+
+OpenFeign
+
+↓
+
+Catalog Service
+
+↓
+
+Inventory Validation
+
+↓
+
+Response
+```
+
+OpenFeign is used only for synchronous service communication where an immediate response is required.
+
+---
+
+# 📨 Event-Driven Communication
+
+QuickCart uses **Apache Kafka** for asynchronous communication.
+
+Unlike REST communication, Kafka enables services to communicate without direct dependency.
+
+### Order Event Flow
+
+```
+Order Service
+
+↓
+
+Publish Event
+
+↓
+
+Kafka
+
+↓
+
+Notification Service
+
+↓
+
+Send Notification
+```
+
+### Payment Event Flow
+
+```
+Payment Service
+
+↓
+
+Publish Event
+
+↓
+
+Kafka
+
+↓
+
+Notification Service
+
+↓
+
+Send Notification
+```
+
+Benefits:
+
+- Loose Coupling
+- High Scalability
+- Asynchronous Processing
+- Better Reliability
+
+---
+
+# ⚡ Redis Cache
+
+Redis is used to reduce database access and improve response time.
+
+Cache Flow
+
+```
+Client
+
+↓
+
+Gateway
+
+↓
+
+Catalog Service
+
+↓
+
+Redis
+
+↓
+
+Cache Hit
+
+↓
+
+Return Response
+
+OR
+
+↓
+
+Cache Miss
+
+↓
+
+PostgreSQL
+
+↓
+
+Store in Redis
+
+↓
+
+Return Response
+```
+
+Advantages
+
+- Faster API Response
+- Reduced Database Load
+- Better Scalability
+- Improved Performance
+
+---
+
+# 📈 Logging & Monitoring
+
+QuickCart includes centralized tracing using **Micrometer** and **Zipkin**.
+
+Every request is traced across multiple microservices.
+
+```
+Gateway
+
+↓
+
+Auth
+
+↓
+
+Catalog
+
+↓
+
+Order
+
+↓
+
+Payment
+
+↓
+
+Notification
+
+↓
+
+Zipkin
+```
+
+The application also generates Docker container logs for every microservice, making debugging and troubleshooting easier during development and deployment.
+
+---
+
+# 🐳 Docker Architecture
+
+Every microservice is packaged as an independent Docker image.
+
+```
+Docker Engine
+
+├── Gateway Container
+├── Auth Container
+├── Catalog Container
+├── Order Container
+├── Payment Container
+├── Notification Container
+├── PostgreSQL Container
+├── Redis Container
+├── Kafka Container
+├── ZooKeeper Container
+└── Zipkin Container
+```
+
+Docker Compose is used to orchestrate all containers and provide a consistent local and production deployment environment.
