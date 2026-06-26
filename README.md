@@ -271,7 +271,7 @@ The entire application is containerized using Docker and deployed to AWS EC2 thr
 
 <p align="center">
 
-![Architecture](docs/images/quickcart-architecture.png)
+![Architecture](SystemArch.png)
 
 </p>
 
