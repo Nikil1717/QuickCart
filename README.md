@@ -22,6 +22,13 @@
 
 </div>
 
+
+<p align="center">
+
+![Architecture](SystemArch.png)
+
+</p>
+
 ---
 
 # 📌 About QuickCart
@@ -269,11 +276,7 @@ Each microservice owns its own business logic and communicates using either:
 
 The entire application is containerized using Docker and deployed to AWS EC2 through a fully automated GitHub Actions CI/CD pipeline.
 
-<p align="center">
 
-![Architecture](SystemArch.png)
-
-</p>
 
 ---
 
