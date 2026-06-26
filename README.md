@@ -23,7 +23,7 @@
 </div>
 
 
-- # 🏗️ System ArchitectureS
+- # 🏗️ System Architecture
 
 <p align="center">
 
