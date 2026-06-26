@@ -71,7 +71,7 @@ The project simulates a real-world backend system by implementing:
 - Route Protection
 - Stateless Authentication
 
----
+--
 
 ### 📦 Product Catalog
 
